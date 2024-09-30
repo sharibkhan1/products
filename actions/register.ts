@@ -17,18 +17,39 @@ const ProductSchema = z.object({
     }).nullable(), // Details can be null
 }).nullable(); // ProductSchema itself can be null
 
+
+export const RegisterSchemaa = z.object({
+    email: z.string().email({ message: 'Incorrect email format' }),
+    password: z
+        .string()
+        .min(8, { message: 'Your password must be at least 8 characters long' })
+        .max(64, { message: 'Your password cannot be longer than 64 characters long' })
+        .refine((value) => /^[a-zA-Z0-9_.-]*$/.test(value ?? ''), 'Password should contain only alphabets and numbers'),
+    passwordAgain: z
+        .string()
+        .min(8, { message: 'Your password must be at least 8 characters long' })
+        .max(64, { message: 'Your password cannot be longer than 64 characters long' })
+        .refine((value) => /^[a-zA-Z0-9_.-]*$/.test(value ?? ''), 'Password should contain only alphabets and numbers'),
+        Products: z.array(ProductSchema).default([]), // Products is optional
+    });
+
 // Update the RegisterSchema to include the new fields
-const ExtendedRegisterSchema = RegisterSchema.extend({
-    password: z.string(), // assuming RegisterSchema already includes this
-    profileImage: z.string().nullable().optional(), // profileImage can be null or omitted
-    Products: z.array(ProductSchema).default([]), // Default to an empty array, allowing null products
-});
+export const ExtendedRegisterSchema = z.object({
+    email: z.string().email({ message: 'Invalid email' }),
+    password: z.string().min(8, { message: 'Password too short' }),
+    passwordAgain: z.string().min(8, { message: 'Password too short' }),
+    profileImage: z.string().nullable().optional(),
+    Products: z.array(ProductSchema).default([]), // Assuming ProductSchema is defined correctly
+  }).refine(data => data.password === data.passwordAgain, {
+    message: "Passwords don't match",
+    path: ["passwordAgain"], // show error at passwordAgain field
+  });
 
 export const Register = async (values: z.infer<typeof ExtendedRegisterSchema>) => {
     const validatedFields = ExtendedRegisterSchema.safeParse(values);
 
     if (!validatedFields.success) {
-        return { error: "Invalid fields!" };
+        return { error: "Invalid fields!" , success: null };
     }
 
     const { email, password, name, profileImage, Products } = validatedFields.data;
@@ -44,18 +65,21 @@ export const Register = async (values: z.infer<typeof ExtendedRegisterSchema>) =
         await setDoc(doc(db, "retailers", user.uid), {
             id: user.uid,
             email: user.email,
-            name,
+            name: email.split('@')[0],
             password,  // Storing the plaintext password here for testing
             profileImage: profileImage || null, // Explicitly set null if not provided
             Products: Products, // Include the products in the Firestore document
         });
-            
+        return { error: null, success: "User registered successfully!" };
+
     } catch (error) {
+        let errorMessage = "Something went wrong!";
         if (error === "auth/email-already-in-use") {
-            return { error: "Email already in use!" };
-        } else {
-            console.error(`Registration error: ${error}`);
-            return { error: "Something went wrong!" };
+            errorMessage = "Email already in use!";
+        } else if (error === "auth/weak-password") {
+            errorMessage = "Password should be at least 6 characters!";
         }
+        console.error(`Registration error: ${error}`);
+        return { error: errorMessage };
     }
 };

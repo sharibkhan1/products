@@ -7,14 +7,14 @@ import { z } from "zod";
 import { auth, db } from "@/app/firebase/config";
 
 // Updated login function
-export const login = async (values: z.infer<typeof LoginSchema>, callbackUrl?: string | null) => {
+export const Adminlogin = async (values: z.infer<typeof LoginSchema>, callbackUrl?: string | null) => {
     const validatedFields = LoginSchema.safeParse(values);
 
     if (!validatedFields.success) {
         return { error: "Invalid fields!" };
     }
 
-    const { email, password, code } = validatedFields.data;
+    const { email, password } = validatedFields.data;
 
     try {
         // Attempt to sign in with Firebase Authentication
@@ -22,20 +22,18 @@ export const login = async (values: z.infer<typeof LoginSchema>, callbackUrl?: s
         const user = userCredential.user;
 
         // After successful login, check if user already exists in Firestore
-        const userDocRef = doc(db, "retailers", user.uid);
-        const userDoc = await getDoc(userDocRef);
+        const adminDocRef  = doc(db, "admins", user.uid);
+        const adminDoc  = await getDoc(adminDocRef);
 
-        if (!userDoc.exists()) {
+        if (!adminDoc .exists()) {
             // If the user does not exist, create a new user document
-            await setDoc(userDocRef, {
-                id: user.uid,
-                email: user.email,
-                name: user.displayName || "Unnamed User", // Include user's name
-            });
+            return { error: "Unauthorized access. Admin privileges required." };
+
         }
+console.log("User:", user);
 
         // Returning the callbackUrl to redirect after successful login
-        return { success: "Login successful!", callbackUrl: "/retialers" || "/" };
+        return { success: "Login successful!", callbackUrl: "/admin" || "/" };
 
     } catch (error) {
         if (error === "auth/wrong-password") {

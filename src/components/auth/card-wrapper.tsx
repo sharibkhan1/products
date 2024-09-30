@@ -11,9 +11,11 @@ interface CardWrapperProps{
     backButtonLabel: string;
     backButtonHref: string;
     showSocial?: boolean;
+    AdminButtonHref?:string;
+    AdminLabel?:string;
 }
 
-export const CardWrapper = ({children,headerLabel,backButtonHref,backButtonLabel,showSocial}:CardWrapperProps) => {
+export const CardWrapper = ({AdminLabel,AdminButtonHref,children,headerLabel,backButtonHref,backButtonLabel,showSocial}:CardWrapperProps) => {
   return (
     <Card className=' w-[400px] shadow-md ' >
         <CardHeader>
@@ -22,16 +24,17 @@ export const CardWrapper = ({children,headerLabel,backButtonHref,backButtonLabel
         <CardContent>
         {children}
         </CardContent>
-        {showSocial && (
-            <CardFooter>
-                <Social/>
-            </CardFooter>
-        )}
         <CardFooter>
             <BackButton
                 label={backButtonLabel}
                 href={backButtonHref}
             />
+                {AdminLabel && AdminButtonHref && ( // Conditionally render Admin button
+                    <BackButton
+                        label={AdminLabel}
+                        href={AdminButtonHref}
+                    />
+                )}
         </CardFooter>
     </Card>
   )

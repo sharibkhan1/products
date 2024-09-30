@@ -1,20 +1,16 @@
-'use client';
+import Image from "next/image";
+
 import appde from "@/public/app-ui.png"
 import logo from "@/public/logo.png"
 
-import { redirect, useRouter } from 'next/navigation'; // Import navigation functions
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { LoginButton } from "@/components/auth/login-button";
-
-export default function Home() {
-  const router = useRouter(); // Initialize router for navigation
-  const handleRedirect = () => {
-    router.push('/signin'); // Redirects the user to the sign-in page
-  };
+const AuthLayout=({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
   return (
 <div className='h-screen flex w-full justify-center' >
-<div className='w-[600px] ld:w-full flex flex-col items-center p-6 ' >
+        <div className='w-[600px] ld:w-full flex flex-col items-center p-6 ' >
             <Image
             src={logo}
             alt="LOGO"
@@ -26,9 +22,7 @@ export default function Home() {
             width={0}
             height={0}
             />
-           <Button variant="secondary" onClick={handleRedirect} >
-            Welcome
-           </Button>
+        {children}
         </div>
         <div className='hidden lg:flex flex-1 w-full max-h-full max-w-4000px overflow-hidden
         relative bg-cream flex-col pt-10 pl-24 gap-3 ' >
@@ -51,6 +45,7 @@ export default function Home() {
         />  
         </div>
     </div>
-
   );
 }
+
+export default AuthLayout;
